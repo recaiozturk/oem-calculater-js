@@ -48,8 +48,8 @@ const UIController=(function(){
     const Selectors={
         productList:'#item-list',
         addButton:'.addBtn',
-        productName:'productName',
-        procutPrice:'productPrice'
+        productName:'#productName',
+        productPrice:'#productPrice'
     }
 
     return{
@@ -96,18 +96,18 @@ const App=(function(ProductCtrl,UICtrl){
     const loadEventListeners=function(){
 
         //add product event
-        document.querySelector(UISelectors.addButton).addEventListener('click',productAddSubmit)
-
+         document.querySelector(UISelectors.addButton).addEventListener('click',productAddSubmit)
+        
     }
 
     const productAddSubmit=function(e){
 
         const productName=document.querySelector(UISelectors.productName).value;
-        const productPrice=documen.querySelector(UISelectors.productPrice).value;
+        const productPrice=document.querySelector(UISelectors.productPrice).value;
 
-        console.log(productName);
+        console.log(productName +productPrice);
 
-        e.preventDefault(); 
+        e.preventDefault();
     }
 
     return{
