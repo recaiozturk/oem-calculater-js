@@ -107,6 +107,7 @@ const App=(function(ProductCtrl,UICtrl){
 
         console.log(productName +productPrice);
 
+        //sayfa yeniden yüklenmesin.
         e.preventDefault();
     }
 
