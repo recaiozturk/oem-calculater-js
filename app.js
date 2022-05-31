@@ -49,6 +49,26 @@ const ProductController=(function(){
             return newProduct;
         },
 
+        getProductById:function(id){
+            let product =null;
+
+            data.products.forEach(function(prd){
+                if(prd.id==id){
+                    product=prd;
+                }
+            });
+
+            return product;
+        },
+
+        setCurrentProduct:function(product){
+            data.selectedProduct=product;
+        },
+
+        getCurrrentProduct:function(){
+            return data.selectedProduct;
+        },
+
         getTotal:function(){
             let total=0;
 
@@ -71,6 +91,9 @@ const UIController=(function(){
     const Selectors={
         productList:'#item-list',
         addButton:'.addBtn',
+        updateButton:'.updateBtn',
+        cancelButton:'.cancelBtn',
+        deleteButton:'.deleteBtn',
         productName:'#productName',
         productPrice:'#productPrice',
         productCard:'#productCard',
@@ -92,9 +115,9 @@ const UIController=(function(){
                     <td>${prd.name}</td>
                     <td>${prd.price}</td>
                     <td class="text-right">
-                        <button type="submit" class="btn btn-warning">
-                            <i class="far fa-edit"></i> 
-                        </button>
+                        
+                            <i class="far fa-edit edit-product"></i> 
+                        
                     </td>
                 </tr>
 
@@ -120,9 +143,7 @@ const UIController=(function(){
                 <td>${product.name}</td>
                 <td>${product.price}</td>
                 <td class="text-right">
-                    <button type="submit" class="btn btn-warning">
-                        <i class="far fa-edit"></i> 
-                    </button>
+                     <i class="far fa-edit edit-product"></i> 
                 </td>
             </tr>
 
@@ -143,6 +164,39 @@ const UIController=(function(){
         showTotal:function(total){
             document.querySelector(Selectors.totalDolar).textContent=total;
             document.querySelector(Selectors.totalTL).textContent=total*16.37;
+        },
+
+        addProductToForm:function(){
+            const selectedProduct=ProductController.getCurrrentProduct();
+            document.querySelector(Selectors.productName).value=selectedProduct.name;
+            document.querySelector(Selectors.productPrice).value=selectedProduct.price;
+        },
+
+        addingState:function(){
+            UIController.clearInputs();
+            document.querySelector(Selectors.addButton).style.display='inline';
+            document.querySelector(Selectors.updateButton).style.display='none';
+            document.querySelector(Selectors.deleteButton).style.display='none';
+            document.querySelector(Selectors.cancelButton).style.display='none';
+        },
+
+        editState:function(tr){
+
+            //arkaplanı olanları sil
+            const parent=tr.parentNode;
+
+            for(let i=0;i<parent.children.length;i++){
+                parent.children[i].classList.remove('bg-warning');
+            }
+
+            //arka plan ekle
+            tr.classList.add('bg-warning');
+
+            document.querySelector(Selectors.addButton).style.display='none';
+            document.querySelector(Selectors.updateButton).style.display='inline';
+            document.querySelector(Selectors.deleteButton).style.display='inline';
+            document.querySelector(Selectors.cancelButton).style.display='inline';
+
         }
 
     }
@@ -158,7 +212,10 @@ const App=(function(ProductCtrl,UICtrl){
     const loadEventListeners=function(){
 
         //add product event
-         document.querySelector(UISelectors.addButton).addEventListener('click',productAddSubmit)
+         document.querySelector(UISelectors.addButton).addEventListener('click',productAddSubmit);
+
+         //edit product
+         document.querySelector(UISelectors.productList).addEventListener('click',productEditSubmit);
         
     }
 
@@ -188,9 +245,33 @@ const App=(function(ProductCtrl,UICtrl){
         e.preventDefault();
     }
 
+    const productEditSubmit=function(e){
+
+        if(e.target.classList.contains('edit-product')){
+
+            //id ye ulaşıyoruz
+            const id=e.target.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.textContent;
+
+            //get selected dproduct
+            const product = ProductCtrl.getProductById(id);
+            
+            //set current product
+            ProductCtrl.setCurrentProduct(product);
+
+            //addd product to UI
+            UICtrl.addProductToForm();
+
+            //edit state : butonları kaldır,getir,arka plan değiştir..
+            UICtrl.editState(e.target.parentNode.parentNode); //tr ye ulaşıp parametre oalrak gönderiyoruz
+        }
+
+        e.preventDefault();
+    }
+
     return{
         init:function(){
             console.log("Starting App...");
+            UICtrl.addingState();
             const products=ProductController.getProducts();
 
             if(products.length==0){
