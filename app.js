@@ -220,7 +220,7 @@ const UIController=(function(){
             <tr>
                 <td>${product.id}</td>
                 <td>${product.name}</td>
-                <td>${product.price}</td>
+                <td>${product.price} <strong>$</strong> </td>
                 <td class="text-right">
                      <i class="far fa-edit edit-product"></i> 
                 </td>
