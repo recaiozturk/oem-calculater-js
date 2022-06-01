@@ -49,6 +49,20 @@ const ProductController=(function(){
             return newProduct;
         },
 
+        updateProdcut:function(name,price){
+            let product = null;
+            
+            data.products.forEach(function(prd){
+                if(prd.id==data.selectedProduct.id){
+                    prd.name=name;
+                    prd.price=parseFloat(price);
+                    product=prd;
+                }
+            });
+
+            return product;
+        },
+
         getProductById:function(id){
             let product =null;
 
@@ -90,6 +104,7 @@ const UIController=(function(){
 
     const Selectors={
         productList:'#item-list',
+        productListItems:'#item-list tr',   //item list altındaki tr ler
         addButton:'.addBtn',
         updateButton:'.updateBtn',
         cancelButton:'.cancelBtn',
@@ -152,6 +167,21 @@ const UIController=(function(){
             document.querySelector(Selectors.productList).innerHTML+=item;
         },
 
+        updateProductToForm:function(product){
+            let updatedItem=null;
+
+            let items=document.querySelectorAll(Selectors.productListItems);
+            items.forEach(function(item){
+                if(item.classList.contains('bg-warning')){
+                    item.children[1].textContent=product.name;  //product name set
+                    item.children[2].textContent=product.price+ '$';  //product price set
+                    updatedItem=item;
+                }
+            });
+
+            return updatedItem;
+        },
+
         clearInputs:function(){
             document.querySelector(Selectors.productName).value="";
             document.querySelector(Selectors.productPrice).value="";
@@ -172,7 +202,10 @@ const UIController=(function(){
             document.querySelector(Selectors.productPrice).value=selectedProduct.price;
         },
 
-        addingState:function(){
+        addingState:function(item){
+            
+            UIController.celarWarnings();
+
             UIController.clearInputs();
             document.querySelector(Selectors.addButton).style.display='inline';
             document.querySelector(Selectors.updateButton).style.display='none';
@@ -182,12 +215,7 @@ const UIController=(function(){
 
         editState:function(tr){
 
-            //arkaplanı olanları sil
-            const parent=tr.parentNode;
-
-            for(let i=0;i<parent.children.length;i++){
-                parent.children[i].classList.remove('bg-warning');
-            }
+           
 
             //arka plan ekle
             tr.classList.add('bg-warning');
@@ -197,6 +225,16 @@ const UIController=(function(){
             document.querySelector(Selectors.deleteButton).style.display='inline';
             document.querySelector(Selectors.cancelButton).style.display='inline';
 
+        },
+
+        celarWarnings:function(){
+            const items =document.querySelectorAll(Selectors.productListItems);
+
+            items.forEach(function(item){
+                if(item.classList.contains('bg-warning')){
+                    item.classList.remove('bg-warning');
+                }
+            });
         }
 
     }
@@ -214,8 +252,14 @@ const App=(function(ProductCtrl,UICtrl){
         //add product event
          document.querySelector(UISelectors.addButton).addEventListener('click',productAddSubmit);
 
-         //edit product
-         document.querySelector(UISelectors.productList).addEventListener('click',productEditSubmit);
+         //edit product Click
+         document.querySelector(UISelectors.productList).addEventListener('click',productEditClick);
+
+         //edit product submit
+         document.querySelector(UISelectors.updateButton).addEventListener('click',editProductSubmit);
+
+         //cancel button click
+         document.querySelector(UISelectors.cancelButton).addEventListener('click',cancelUpdate);
         
     }
 
@@ -245,7 +289,7 @@ const App=(function(ProductCtrl,UICtrl){
         e.preventDefault();
     }
 
-    const productEditSubmit=function(e){
+    const productEditClick=function(e){
 
         if(e.target.classList.contains('edit-product')){
 
@@ -264,6 +308,42 @@ const App=(function(ProductCtrl,UICtrl){
             //edit state : butonları kaldır,getir,arka plan değiştir..
             UICtrl.editState(e.target.parentNode.parentNode); //tr ye ulaşıp parametre oalrak gönderiyoruz
         }
+
+        e.preventDefault();
+    }
+
+    const editProductSubmit=function(e){
+
+        const productName=document.querySelector(UISelectors.productName).value;
+        const productPrice=document.querySelector(UISelectors.productPrice).value;
+
+        if(productName!=='' && productPrice!==''){
+
+            //update product
+            const updatedProduct=ProductCtrl.updateProdcut(productName,productPrice);
+
+            //update ui
+            let item=UICtrl.updateProductToForm(updatedProduct);
+
+            //get total
+            const total=ProductController.getTotal();
+            
+            //show total
+            UICtrl.showTotal(total);
+
+            UICtrl.addingState();
+
+        }
+
+        e.preventDefault();
+    }
+
+    const cancelUpdate=function(e){
+
+        
+        UIController.addingState();
+        UIController.celarWarnings();
+
 
         e.preventDefault();
     }
