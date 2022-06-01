@@ -1,6 +1,38 @@
 //Storage Controller
 const StorageController=(function(){
 
+    return{
+
+        //locale storage da kaydediyoruz
+        storeProduct:function(product){
+
+            let products;
+            //local storage de daha önceden products key i var mı sorguluyoruz,sonuca göre products alanı oluşturum kaydetme yapacaz
+            if(localStorage.getItem('products')===null){
+                products=[];
+                products.push(product);
+                
+            }else{
+                products=JSON.parse(localStorage.getItem('products'));
+                products.push(product);
+            }
+
+            localStorage.setItem('products',JSON.stringify(products));
+        },
+
+
+        getProducts:function(){
+
+            let products;
+            if(localStorage.getItem('products')===null){
+                products=[];
+            }else{
+                products=JSON.parse(localStorage.getItem('products'));
+            }
+            return products;
+        }
+    }
+
 })();
 
 
@@ -15,7 +47,7 @@ const ProductController=(function(){
     }
 
     const data={
-        products:[],
+        products:StorageController.getProducts(),
 
         selectedProduct:null,
         totalPrice:0
@@ -61,6 +93,16 @@ const ProductController=(function(){
             });
 
             return product;
+        },
+
+        deleteProduct:function(product){
+
+            //ürün indexini bul splice ile o indexten sonra sil(farklı yöntemler kullanılabilir)
+            data.products.forEach(function(prd,index){
+                if(prd.id==product.id){
+                    data.products.splice(index,1);
+                }
+            });
         },
 
         getProductById:function(id){
@@ -182,6 +224,15 @@ const UIController=(function(){
             return updatedItem;
         },
 
+        deleteProductToForm:function(product){
+            let items=document.querySelectorAll(Selectors.productListItems);
+            items.forEach(function(item){
+                if(item.classList.contains('bg-warning')){
+                    item.remove();
+                };
+            });
+        },
+
         clearInputs:function(){
             document.querySelector(Selectors.productName).value="";
             document.querySelector(Selectors.productPrice).value="";
@@ -242,7 +293,7 @@ const UIController=(function(){
 })();
 
 //App Controller
-const App=(function(ProductCtrl,UICtrl){
+const App=(function(ProductCtrl,UICtrl,StorageCtrl){
 
     const UISelectors=UIController.getSelectors();
 
@@ -260,7 +311,9 @@ const App=(function(ProductCtrl,UICtrl){
 
          //cancel button click
          document.querySelector(UISelectors.cancelButton).addEventListener('click',cancelUpdate);
-        
+
+         //delete button click
+        document.querySelector(UISelectors.deleteButton).addEventListener('click',deleteProductSubmit);
     }
 
     const productAddSubmit=function(e){
@@ -274,6 +327,9 @@ const App=(function(ProductCtrl,UICtrl){
 
             //add item to list
             UIController.addProduct(newProduct);
+
+            //add product to local storage
+            StorageCtrl.storeProduct(newProduct);
 
             //get total
             const total=ProductController.getTotal();
@@ -301,6 +357,8 @@ const App=(function(ProductCtrl,UICtrl){
             
             //set current product
             ProductCtrl.setCurrentProduct(product);
+
+            UIController.celarWarnings();
 
             //addd product to UI
             UICtrl.addProductToForm();
@@ -348,6 +406,32 @@ const App=(function(ProductCtrl,UICtrl){
         e.preventDefault();
     }
 
+    const deleteProductSubmit=function(e){
+
+        //get selected product
+        const selectedProduct=ProductController.getCurrrentProduct();
+
+        //delete product
+        ProductController.deleteProduct(selectedProduct);
+
+        //delete ui 
+        UIController.deleteProductToForm();
+
+        //get total
+        const total=ProductController.getTotal();
+            
+        //show total
+        UICtrl.showTotal(total);
+
+        UICtrl.addingState();
+
+        if(total==0){
+            UIController.hideCard();
+        }
+
+        e.preventDefault();
+    }
+
     return{
         init:function(){
             console.log("Starting App...");
@@ -365,7 +449,7 @@ const App=(function(ProductCtrl,UICtrl){
         }
     }
 
-})(ProductController,UIController);
+})(ProductController,UIController,StorageController);
 
 //Uygulaam Başlasın
 App.init();
